@@ -64,6 +64,13 @@
     color: var(--color-secondary);
   }
 
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible {
+    outline: 3px solid var(--color-secondary);
+    outline-offset: 3px;
+  }
+
   .hero {
     display: flex;
     flex-direction: column;
@@ -105,6 +112,13 @@
   .btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(232, 163, 61, 0.4);
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 
   .mensaje-ubicacion {
@@ -175,6 +189,180 @@
     font-size: 0.98rem;
   }
 
+  /* Pop-up de contacto */
+  dialog.modal {
+    margin: auto;
+    padding: 0;
+    border: none;
+    border-radius: 16px;
+    width: min(92vw, 420px);
+    background-color: var(--color-card);
+    color: var(--color-text);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    border-top: 5px solid var(--color-secondary);
+  }
+
+  dialog.modal::backdrop {
+    background: rgba(30, 45, 35, 0.6);
+  }
+
+  dialog.modal[open] {
+    animation: aparecer 0.2s ease;
+  }
+
+  @keyframes aparecer {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal-contenido {
+    position: relative;
+    padding: 40px 32px 32px;
+    text-align: center;
+  }
+
+  .modal-cerrar {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: var(--color-muted);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 8px;
+  }
+
+  .modal-cerrar:hover {
+    color: var(--color-primary);
+  }
+
+  .modal-whatsapp {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 6px;
+  }
+
+  .modal-telefono {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin-bottom: 28px;
+  }
+
+  .modal-titulo {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 12px;
+  }
+
+  .modal-enlace {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .modal-enlace:hover {
+    color: #1f3a27;
+  }
+
+  /* Sección de información por correo */
+  .informacion {
+    padding: 90px 8%;
+    text-align: center;
+    background-color: #F3EEE4;
+    scroll-margin-top: 72px;
+  }
+
+  .informacion h2 {
+    font-size: 2.2rem;
+    margin-bottom: 12px;
+    color: var(--color-primary);
+  }
+
+  .informacion > p {
+    color: var(--color-muted);
+    max-width: 560px;
+    margin: 0 auto 36px;
+    font-size: 1.1rem;
+    line-height: 1.5;
+  }
+
+  .form-info {
+    max-width: 480px;
+    margin: 0 auto;
+    background-color: var(--color-card);
+    border-radius: 16px;
+    padding: 32px 28px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    text-align: left;
+  }
+
+  .consentimiento {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--color-text);
+    margin-bottom: 22px;
+  }
+
+  .consentimiento input {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    accent-color: var(--color-primary);
+  }
+
+  .form-info label.campo {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--color-primary);
+  }
+
+  .form-info input[type="email"] {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 1rem;
+    border: 2px solid #D9D3C7;
+    border-radius: 10px;
+    margin-bottom: 22px;
+    font-family: inherit;
+  }
+
+  .form-info input[type="email"]:focus {
+    border-color: var(--color-primary);
+  }
+
+  .form-info .btn {
+    width: 100%;
+  }
+
+  .estado-envio {
+    margin-top: 18px;
+    font-size: 0.95rem;
+    min-height: 22px;
+    line-height: 1.4;
+  }
+
+  .estado-envio.ok {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .estado-envio.error {
+    color: #A63A2B;
+    font-weight: 600;
+  }
+
   footer {
     background-color: var(--color-primary);
     color: #F1EDE3;
@@ -197,6 +385,15 @@
     .hero p {
       font-size: 1.05rem;
     }
+    .informacion h2 {
+      font-size: 1.8rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    dialog.modal[open] {
+      animation: none;
+    }
   }
 </style>
 </head>
@@ -207,7 +404,7 @@
   <ul>
     <li><a href="#inicio">Inicio</a></li>
     <li><a href="#servicios">Servicios</a></li>
-    <li><a href="#contacto">Contacto</a></li>
+    <li><a href="#contacto" onclick="return abrirContacto(event)">Contacto</a></li>
   </ul>
 </nav>
 
@@ -240,11 +437,43 @@
   </div>
 </section>
 
+<section class="informacion" id="informacion">
+  <h2>Recibe información por correo</h2>
+  <p>Te enviamos una guía sobre adiestramiento canino positivo. Solo necesitas tu correo y tu autorización.</p>
+  <form class="form-info" id="formInfo" onsubmit="return enviarInformacion(event)">
+    <label class="consentimiento">
+      <input type="checkbox" id="consentimiento" required>
+      <span>Acepto que Dogo me envíe un correo con información sobre adiestramiento canino positivo. Usaremos mi correo únicamente para enviarme esta información.</span>
+    </label>
+    <label class="campo" for="correo">Tu correo electrónico</label>
+    <input type="email" id="correo" name="correo" placeholder="nombre@correo.com" autocomplete="email" required>
+    <button type="submit" class="btn" id="botonEnviar">Enviar información</button>
+    <p class="estado-envio" id="estadoEnvio" role="status" aria-live="polite"></p>
+  </form>
+</section>
+
+<dialog class="modal" id="modalContacto" aria-labelledby="modalWhatsapp">
+  <div class="modal-contenido">
+    <button type="button" class="modal-cerrar" aria-label="Cerrar" onclick="cerrarContacto()">&times;</button>
+    <p class="modal-whatsapp" id="modalWhatsapp">Contáctanos por WhatsApp</p>
+    <p class="modal-telefono">+52 55 0000 0000</p>
+    <p class="modal-titulo">Información sobre adiestramiento canino positivo</p>
+    <a href="#informacion" class="modal-enlace" onclick="return irAInformacion(event)">Recibe la información por correo</a>
+  </div>
+</dialog>
+
 <footer id="contacto">
   <p>&copy; 2026 Dogo. Todos los derechos reservados.</p>
 </footer>
 
 <script>
+  /* ===== Configuración de EmailJS: reemplaza estos valores ===== */
+  var EMAILJS_SERVICE_ID = 'Service-Dogo';
+  var EMAILJS_TEMPLATE_ID = 'DOGO-INFO';
+  var EMAILJS_PUBLIC_KEY = 'axBUt63hiWhtYnJhj';
+  var EMAILJS_VARIABLE_CORREO = 'to_email';
+  /* ============================================================ */
+
   function solicitarUbicacion(event) {
     event.preventDefault();
     var mensaje = document.getElementById('mensajeUbicacion');
@@ -268,6 +497,101 @@
         document.getElementById('servicios').scrollIntoView({ behavior: 'smooth' });
       }
     );
+
+    return false;
+  }
+
+  var modal = document.getElementById('modalContacto');
+
+  function abrirContacto(event) {
+    if (!modal || typeof modal.showModal !== 'function') {
+      return true;
+    }
+    event.preventDefault();
+    modal.showModal();
+    return false;
+  }
+
+  function cerrarContacto() {
+    if (modal && modal.open) {
+      modal.close();
+    }
+  }
+
+  function irAInformacion(event) {
+    event.preventDefault();
+    cerrarContacto();
+    document.getElementById('informacion').scrollIntoView({ behavior: 'smooth' });
+    setTimeout(function () {
+      document.getElementById('correo').focus({ preventScroll: true });
+    }, 500);
+    return false;
+  }
+
+  if (modal) {
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) {
+        cerrarContacto();
+      }
+    });
+  }
+
+  function enviarInformacion(event) {
+    event.preventDefault();
+
+    var estado = document.getElementById('estadoEnvio');
+    var boton = document.getElementById('botonEnviar');
+    var correo = document.getElementById('correo').value.trim();
+    var acepto = document.getElementById('consentimiento').checked;
+
+    estado.className = 'estado-envio';
+
+    if (!acepto) {
+      estado.textContent = 'Para continuar, marca la casilla de consentimiento.';
+      estado.className = 'estado-envio error';
+      return false;
+    }
+
+    if (EMAILJS_SERVICE_ID === 'TU_SERVICE_ID' || EMAILJS_TEMPLATE_ID === 'TU_TEMPLATE_ID' || EMAILJS_PUBLIC_KEY === 'TU_PUBLIC_KEY') {
+      estado.textContent = 'Falta configurar EmailJS: reemplaza los tres valores al inicio del script.';
+      estado.className = 'estado-envio error';
+      return false;
+    }
+
+    var parametros = {};
+    parametros[EMAILJS_VARIABLE_CORREO] = correo;
+
+    boton.disabled = true;
+    estado.textContent = 'Enviando...';
+
+    fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: EMAILJS_SERVICE_ID,
+        template_id: EMAILJS_TEMPLATE_ID,
+        user_id: EMAILJS_PUBLIC_KEY,
+        template_params: parametros
+      })
+    })
+      .then(function (respuesta) {
+        if (!respuesta.ok) {
+          return respuesta.text().then(function (texto) {
+            throw new Error(texto || ('Error ' + respuesta.status));
+          });
+        }
+        estado.textContent = '¡Listo! Te enviamos la información a ' + correo + '. Revisa también tu carpeta de spam.';
+        estado.className = 'estado-envio ok';
+        document.getElementById('formInfo').reset();
+      })
+      .catch(function (error) {
+        console.error('EmailJS:', error);
+        estado.textContent = 'No pudimos enviar el correo. Revisa tu conexión e inténtalo de nuevo.';
+        estado.className = 'estado-envio error';
+      })
+      .then(function () {
+        boton.disabled = false;
+      });
 
     return false;
   }
