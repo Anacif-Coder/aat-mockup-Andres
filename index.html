@@ -363,6 +363,48 @@
     font-weight: 600;
   }
 
+  .estado-envio.aviso {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .estado-envio .nota {
+    display: block;
+    margin-top: 6px;
+    font-weight: 400;
+    color: var(--color-muted);
+  }
+
+  .btn-sugerencia {
+    background-color: #EFF6EF;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+    border-radius: 50px;
+    padding: 4px 14px;
+    margin: 0 2px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .btn-sugerencia:hover {
+    background-color: var(--color-primary);
+    color: #FFFFFF;
+  }
+
+  .form-info input[type="email"][aria-invalid="true"] {
+    border-color: #A63A2B;
+  }
+
+  .campo-extra {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
   footer {
     background-color: var(--color-primary);
     color: #F1EDE3;
@@ -440,13 +482,17 @@
 <section class="informacion" id="informacion">
   <h2>Recibe información por correo</h2>
   <p>Te enviamos una guía sobre adiestramiento canino positivo. Solo necesitas tu correo y tu autorización.</p>
-  <form class="form-info" id="formInfo" onsubmit="return enviarInformacion(event)">
+  <form class="form-info" id="formInfo" onsubmit="return enviarInformacion(event)" novalidate>
     <label class="consentimiento">
       <input type="checkbox" id="consentimiento" required>
       <span>Acepto que Dogo me envíe un correo con información sobre adiestramiento canino positivo. Usaremos mi correo únicamente para enviarme esta información.</span>
     </label>
     <label class="campo" for="correo">Tu correo electrónico</label>
     <input type="email" id="correo" name="correo" placeholder="nombre@correo.com" autocomplete="email" required>
+    <div class="campo-extra" aria-hidden="true">
+      <label for="ref_codigo">No llenes este campo</label>
+      <input type="text" id="ref_codigo" name="ref_codigo" tabindex="-1" autocomplete="off">
+    </div>
     <button type="submit" class="btn" id="botonEnviar">Enviar información</button>
     <p class="estado-envio" id="estadoEnvio" role="status" aria-live="polite"></p>
   </form>
@@ -536,25 +582,160 @@
     });
   }
 
+  var DOMINIOS_COMUNES = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'icloud.com', 'live.com', 'yahoo.com.mx'];
+  var DOMINIOS_VALIDOS_EXTRA = ['ymail.com', 'hotmail.es', 'outlook.es', 'live.com.mx', 'msn.com', 'me.com'];
+  var ultimaSugerenciaPara = '';
+
+  function formatoCorreoValido(correo) {
+    if (correo.length > 254) {
+      return false;
+    }
+    return /^[^\s@]+@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/.test(correo);
+  }
+
+  function distancia(a, b) {
+    var d = [];
+    var i, j;
+    for (i = 0; i <= a.length; i++) { d[i] = [i]; }
+    for (j = 1; j <= b.length; j++) { d[0][j] = j; }
+    for (i = 1; i <= a.length; i++) {
+      for (j = 1; j <= b.length; j++) {
+        var costo = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + costo);
+        if (i > 1 && j > 1 && a.charAt(i - 1) === b.charAt(j - 2) && a.charAt(i - 2) === b.charAt(j - 1)) {
+          d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+        }
+      }
+    }
+    return d[a.length][b.length];
+  }
+
+  function sugerirCorreo(correo) {
+    if (/\s/.test(correo)) {
+      return null;
+    }
+    var partes = correo.split('@');
+    if (partes.length !== 2 || partes[0] === '' || partes[1] === '') {
+      return null;
+    }
+    var usuario = partes[0];
+    var dominio = partes[1].toLowerCase();
+    if (DOMINIOS_COMUNES.indexOf(dominio) !== -1 || DOMINIOS_VALIDOS_EXTRA.indexOf(dominio) !== -1) {
+      return null;
+    }
+    var mejor = null;
+    var mejorDistancia = 99;
+    var k, candidato, dist;
+
+    if (dominio.indexOf('.') === -1) {
+      for (k = 0; k < DOMINIOS_COMUNES.length; k++) {
+        candidato = DOMINIOS_COMUNES[k];
+        var sinPunto = candidato.replace(/\./g, '');
+        var nombre = candidato.split('.')[0];
+        dist = Math.min(distancia(dominio, sinPunto), distancia(dominio, nombre));
+        if (dist <= 1 && dist < mejorDistancia) {
+          mejor = candidato;
+          mejorDistancia = dist;
+        }
+      }
+      return mejor ? usuario + '@' + mejor : null;
+    }
+
+    for (k = 0; k < DOMINIOS_COMUNES.length; k++) {
+      candidato = DOMINIOS_COMUNES[k];
+      var umbral = candidato.length >= 10 ? 2 : 1;
+      dist = distancia(dominio, candidato);
+      if (dist <= umbral && dist < mejorDistancia) {
+        mejor = candidato;
+        mejorDistancia = dist;
+      }
+    }
+    return mejor ? usuario + '@' + mejor : null;
+  }
+
+  function mostrarEstado(texto, tipo) {
+    var estado = document.getElementById('estadoEnvio');
+    estado.className = 'estado-envio' + (tipo ? ' ' + tipo : '');
+    estado.textContent = texto;
+    return estado;
+  }
+
+  function marcarCorreoInvalido(invalido) {
+    var campo = document.getElementById('correo');
+    if (invalido) {
+      campo.setAttribute('aria-invalid', 'true');
+    } else {
+      campo.removeAttribute('aria-invalid');
+    }
+  }
+
+  function mostrarSugerencia(sugerido) {
+    var estado = mostrarEstado('¿Quisiste decir ', 'aviso');
+    var boton = document.createElement('button');
+    boton.type = 'button';
+    boton.className = 'btn-sugerencia';
+    boton.textContent = sugerido;
+    boton.addEventListener('click', function () {
+      document.getElementById('correo').value = sugerido;
+      ultimaSugerenciaPara = '';
+      mostrarEstado('Corregimos tu correo. Presiona «Enviar información» para continuar.', 'aviso');
+    });
+    estado.appendChild(boton);
+    estado.appendChild(document.createTextNode('?'));
+    var nota = document.createElement('span');
+    nota.className = 'nota';
+    nota.textContent = 'Si tu correo está bien así, presiona «Enviar información» otra vez.';
+    estado.appendChild(nota);
+  }
+
+  document.getElementById('correo').addEventListener('input', function () {
+    marcarCorreoInvalido(false);
+  });
+
   function enviarInformacion(event) {
     event.preventDefault();
 
-    var estado = document.getElementById('estadoEnvio');
     var boton = document.getElementById('botonEnviar');
-    var correo = document.getElementById('correo').value.trim();
+    var campoCorreo = document.getElementById('correo');
+    var correo = campoCorreo.value.trim();
     var acepto = document.getElementById('consentimiento').checked;
+    var trampa = document.getElementById('ref_codigo').value;
 
-    estado.className = 'estado-envio';
+    marcarCorreoInvalido(false);
+
+    if (trampa !== '') {
+      mostrarEstado('No pudimos enviar el formulario. Recarga la página e inténtalo de nuevo.', 'error');
+      return false;
+    }
 
     if (!acepto) {
-      estado.textContent = 'Para continuar, marca la casilla de consentimiento.';
-      estado.className = 'estado-envio error';
+      mostrarEstado('Para continuar, marca la casilla de consentimiento.', 'error');
+      return false;
+    }
+
+    if (correo === '') {
+      mostrarEstado('Escribe tu correo electrónico.', 'error');
+      marcarCorreoInvalido(true);
+      campoCorreo.focus();
+      return false;
+    }
+
+    var sugerido = sugerirCorreo(correo);
+    if (sugerido && ultimaSugerenciaPara !== correo.toLowerCase()) {
+      ultimaSugerenciaPara = correo.toLowerCase();
+      mostrarSugerencia(sugerido);
+      return false;
+    }
+
+    if (!formatoCorreoValido(correo)) {
+      mostrarEstado('Revisa tu correo: debe tener el formato nombre@dominio.com, sin espacios.', 'error');
+      marcarCorreoInvalido(true);
+      campoCorreo.focus();
       return false;
     }
 
     if (EMAILJS_SERVICE_ID === 'TU_SERVICE_ID' || EMAILJS_TEMPLATE_ID === 'TU_TEMPLATE_ID' || EMAILJS_PUBLIC_KEY === 'TU_PUBLIC_KEY') {
-      estado.textContent = 'Falta configurar EmailJS: reemplaza los tres valores al inicio del script.';
-      estado.className = 'estado-envio error';
+      mostrarEstado('Falta configurar EmailJS: reemplaza los tres valores al inicio del script.', 'error');
       return false;
     }
 
@@ -562,7 +743,7 @@
     parametros[EMAILJS_VARIABLE_CORREO] = correo;
 
     boton.disabled = true;
-    estado.textContent = 'Enviando...';
+    mostrarEstado('Enviando...');
 
     fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
@@ -580,14 +761,13 @@
             throw new Error(texto || ('Error ' + respuesta.status));
           });
         }
-        estado.textContent = '¡Listo! Te enviamos la información a ' + correo + '. Revisa también tu carpeta de spam.';
-        estado.className = 'estado-envio ok';
+        mostrarEstado('Enviamos la información a ' + correo + '. Si no la ves en unos minutos, revisa tu carpeta de spam y confirma que el correo esté bien escrito.', 'ok');
         document.getElementById('formInfo').reset();
+        ultimaSugerenciaPara = '';
       })
       .catch(function (error) {
         console.error('EmailJS:', error);
-        estado.textContent = 'No pudimos enviar el correo. Revisa tu conexión e inténtalo de nuevo.';
-        estado.className = 'estado-envio error';
+        mostrarEstado('No pudimos enviar el correo. Revisa tu conexión e inténtalo de nuevo.', 'error');
       })
       .then(function () {
         boton.disabled = false;
