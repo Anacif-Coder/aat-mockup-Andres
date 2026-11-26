@@ -611,7 +611,13 @@
   }
 
   function sugerirCorreo(correo) {
+    if (/\s/.test(correo)) {
+      return null;
+    }
     var partes = correo.split('@');
+    if (partes.length !== 2 || partes[0] === '' || partes[1] === '') {
+      return null;
+    }
     var usuario = partes[0];
     var dominio = partes[1].toLowerCase();
     if (DOMINIOS_COMUNES.indexOf(dominio) !== -1 || DOMINIOS_VALIDOS_EXTRA.indexOf(dominio) !== -1) {
@@ -619,10 +625,26 @@
     }
     var mejor = null;
     var mejorDistancia = 99;
-    for (var k = 0; k < DOMINIOS_COMUNES.length; k++) {
-      var candidato = DOMINIOS_COMUNES[k];
+    var k, candidato, dist;
+
+    if (dominio.indexOf('.') === -1) {
+      for (k = 0; k < DOMINIOS_COMUNES.length; k++) {
+        candidato = DOMINIOS_COMUNES[k];
+        var sinPunto = candidato.replace(/\./g, '');
+        var nombre = candidato.split('.')[0];
+        dist = Math.min(distancia(dominio, sinPunto), distancia(dominio, nombre));
+        if (dist <= 1 && dist < mejorDistancia) {
+          mejor = candidato;
+          mejorDistancia = dist;
+        }
+      }
+      return mejor ? usuario + '@' + mejor : null;
+    }
+
+    for (k = 0; k < DOMINIOS_COMUNES.length; k++) {
+      candidato = DOMINIOS_COMUNES[k];
       var umbral = candidato.length >= 10 ? 2 : 1;
-      var dist = distancia(dominio, candidato);
+      dist = distancia(dominio, candidato);
       if (dist <= umbral && dist < mejorDistancia) {
         mejor = candidato;
         mejorDistancia = dist;
@@ -698,17 +720,17 @@
       return false;
     }
 
-    if (!formatoCorreoValido(correo)) {
-      mostrarEstado('Revisa tu correo: debe tener el formato nombre@dominio.com, sin espacios.', 'error');
-      marcarCorreoInvalido(true);
-      campoCorreo.focus();
-      return false;
-    }
-
     var sugerido = sugerirCorreo(correo);
     if (sugerido && ultimaSugerenciaPara !== correo.toLowerCase()) {
       ultimaSugerenciaPara = correo.toLowerCase();
       mostrarSugerencia(sugerido);
+      return false;
+    }
+
+    if (!formatoCorreoValido(correo)) {
+      mostrarEstado('Revisa tu correo: debe tener el formato nombre@dominio.com, sin espacios.', 'error');
+      marcarCorreoInvalido(true);
+      campoCorreo.focus();
       return false;
     }
 
